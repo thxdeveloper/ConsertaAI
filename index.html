@@ -1163,7 +1163,7 @@ REGRA OBRIGATÓRIA DE SEGURANÇA: classifique como "alto" qualquer problema envo
 
 Para problemas de risco baixo ou médio, seja prático e didático, como se explicasse para alguém sem nenhuma experiência técnica.`;
 
-  // ── Busca de vídeos via Tavily (substitui a tool web_search da Anthropic) ──
+  // ── Busca de vídeos via Tavily (o Gemini não tem tool de busca nativa) ──
   // 🔑 Coloque uma ou mais chaves aqui. Se a primeira falhar (limite/cota
   // esgotada, chave expirada, erro de auth), o app tenta a próxima da lista.
   // Crie chaves grátis em: https://app.tavily.com (free tier: ~1.000 buscas/mês/chave, sem cartão)
@@ -1243,8 +1243,7 @@ Para problemas de risco baixo ou médio, seja prático e didático, como se expl
       const content = [];
       if (photoBase64) {
         content.push({
-          type: 'image',
-          source: { type: 'base64', media_type: photoMediaType, data: photoBase64 }
+          inline_data: { mime_type: photoMediaType, data: photoBase64 }
         });
       }
       let userText = desc || 'Veja a foto anexada e identifique o problema.';
@@ -1253,27 +1252,28 @@ Para problemas de risco baixo ou médio, seja prático e didático, como se expl
       const idade = document.getElementById('idadeInput').value.trim();
       if (marca) userText += `\nMarca/modelo informado: ${marca}`;
       if (idade) userText += `\nAno ou tempo de uso informado: ${idade}`;
-      content.push({ type: 'text', text: userText });
+      content.push({ text: userText });
 
-      // 🔑 Substitua 'SUA_CHAVE_AQUI' pela sua API key da Anthropic
-      // Obtenha em: https://console.anthropic.com/
-      const API_KEY = 'SUA_CHAVE_AQUI';
+      // 🔑 Substitua 'SUA_CHAVE_GEMINI_AQUI' pela sua API key do Google AI Studio
+      // Obtenha grátis (sem cartão) em: https://aistudio.google.com/apikey
+      const API_KEY = 'AIzaSyADupb72euGXT5rjKWighSHiUszxFNqnG4';
+      const GEMINI_MODEL = 'gemini-2.5-flash';
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1500,
-          system: SYSTEM_PROMPT,
-          messages: [{ role: 'user', content }]
-        })
-      });
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: [{ role: 'user', parts: content }],
+            generationConfig: {
+              maxOutputTokens: 1500,
+              responseMimeType: 'application/json'
+            }
+          })
+        }
+      );
 
       if (!response.ok) {
         const errBody = await response.text().catch(() => '');
@@ -1282,10 +1282,9 @@ Para problemas de risco baixo ou médio, seja prático e didático, como se expl
 
       const data = await response.json();
 
-      // Concatena blocos de texto (ignora tool_use, tool_result, etc.)
-      const rawText = data.content
-        .filter(b => b.type === 'text')
-        .map(b => b.text)
+      // Extrai o texto da resposta do Gemini
+      const rawText = (data.candidates?.[0]?.content?.parts || [])
+        .map(p => p.text || '')
         .join('');
 
       // Remove possível markdown wrapper
