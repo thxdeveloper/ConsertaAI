@@ -1329,25 +1329,21 @@
 
 Categorias possíveis: Automotivo, Elétrica, Hidráulica, Eletrodomésticos, Móveis, Eletrônicos.
 
-Responda SEMPRE e SOMENTE com um objeto JSON válido, sem nenhum texto antes ou depois, sem markdown, no seguinte formato exato:
-{
-  "problema": "descrição curta e clara do problema identificado",
-  "categoria": "uma das categorias possíveis",
-  "risco": "baixo" | "medio" | "alto",
-  "dificuldade": "facil" | "medio" | "dificil",
-  "ferramentas": ["..."],
-  "pecas": ["..."],
-  "passo_a_passo": ["..."],
-  "videos": [],
-  "video_busca": "termo de busca curto e específico em português para achar tutoriais em vídeo desse reparo",
-  "aviso_seguranca": "string com o motivo do risco, ou null se risco for baixo"
-}
+Responda SEMPRE e SOMENTE com um objeto JSON válido, sem nenhum texto antes ou depois, sem markdown, com exatamente estas chaves:
+- "problema": string — descrição curta e clara do problema identificado
+- "categoria": string — uma das categorias possíveis
+- "risco": string — exatamente "baixo", "medio" ou "alto"
+- "dificuldade": string — exatamente "facil", "medio" ou "dificil"
+- "ferramentas": array de strings
+- "pecas": array de strings
+- "passo_a_passo": array de strings com os passos numerados
+- "videos": array vazio []
+- "video_busca": string — termo curto e objetivo em português para busca no YouTube (ex: "troca resistência chuveiro elétrico")
+- "aviso_seguranca": string com motivo do risco, ou null se risco for baixo ou medio
 
-O campo "videos" deve ser SEMPRE uma lista vazia — a busca de vídeos reais é feita separadamente, fora do seu escopo. Capriche no campo "video_busca": ele precisa ser um termo de busca objetivo (ex: "troca de resistência chuveiro elétrico") que funcione bem numa busca de vídeo no YouTube.
+REGRA DE SEGURANÇA OBRIGATÓRIA: classifique como "alto" qualquer problema envolvendo freios, combustível, airbag, direção, rede elétrica de alta tensão, disjuntores, gás encanado, estrutura de risco ou qualquer reparo com risco real de vida. Nesses casos, "ferramentas", "pecas" e "passo_a_passo" devem ser arrays VAZIOS, e "aviso_seguranca" deve explicar por que é necessário um profissional. Nunca incentive reparos perigosos para economizar dinheiro.
 
-REGRA OBRIGATÓRIA DE SEGURANÇA: classifique como "alto" qualquer problema envolvendo freios, sistema de combustível, airbag, direção, rede elétrica de alta tensão ou quadro de disjuntores, gás, estrutura que comprometa segurança, ou qualquer reparo que exija conhecimento técnico avançado ou risco real de vida. Nesses casos, "ferramentas", "pecas" e "passo_a_passo" devem ser listas VAZIAS, e "aviso_seguranca" deve explicar claramente por que a pessoa deve procurar um profissional. Nunca incentive alguém a mexer em algo perigoso para economizar dinheiro.
-
-Para problemas de risco baixo ou médio, seja prático e didático, como se explicasse para alguém sem nenhuma experiência técnica.`;
+Para risco baixo ou médio, seja prático e didático como se explicasse para alguém sem experiência técnica.`;
 
   // ── Busca de vídeos via Serper (endpoint dedicado de YouTube) ──
   // Plano gratuito: 2.500 queries/mês — serper.dev
@@ -1456,21 +1452,26 @@ Para problemas de risco baixo ou médio, seja prático e didático, como se expl
             system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
             contents: [{ role: 'user', parts: content }],
             generationConfig: {
-              maxOutputTokens: 3000,
-              responseMimeType: 'application/json'
+              maxOutputTokens: 3000
             }
           })
         }
       );
 
       if (!response.ok) {
-        if (response.status === 400 || response.status === 401 || response.status === 403) {
+        const errBody = await response.text().catch(() => '');
+        // Só redireciona pro setup quando a chave é inválida/expirada (401/403)
+        if (response.status === 401 || response.status === 403) {
           showSetup();
           setupError.textContent = 'Sua chave do Gemini parece inválida ou expirada. Gere uma nova e cole aqui.';
           setupError.style.display = 'block';
         }
-        const errBody = await response.text().catch(() => '');
-        throw new Error(`Erro ${response.status}${errBody ? ': ' + errBody.slice(0,120) : ''}`);
+        let errMsg = `Erro ${response.status}`;
+        try {
+          const errJson = JSON.parse(errBody);
+          errMsg += ': ' + (errJson?.error?.message || errBody.slice(0, 120));
+        } catch { errMsg += errBody ? ': ' + errBody.slice(0, 120) : ''; }
+        throw new Error(errMsg);
       }
 
       const data = await response.json();
@@ -1484,15 +1485,18 @@ Para problemas de risco baixo ou médio, seja prático e didático, como se expl
         throw new Error('A resposta da IA foi cortada por limite de tokens. Tente novamente ou aumente o maxOutputTokens no código.');
       }
 
-      // Remove possível markdown wrapper
-      const clean = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+      // Remove markdown wrapper e extrai JSON
+      let clean = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+      // Tenta extrair objeto JSON caso venha com texto ao redor
+      const jsonMatch = clean.match(/\{[\s\S]*\}/);
+      if (jsonMatch) clean = jsonMatch[0];
 
       let parsed;
       try {
         parsed = JSON.parse(clean);
       } catch (parseErr) {
-        console.error('JSON inválido:', clean);
-        throw new Error('A IA retornou uma resposta inesperada. Tente novamente.');
+        console.error('JSON inválido recebido:', clean.slice(0, 300));
+        throw new Error('A IA retornou uma resposta inesperada. Tente descrever o problema com mais detalhes.');
       }
 
       // Busca os vídeos reais via Serper (só se o reparo não for de risco alto)
