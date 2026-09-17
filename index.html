@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Conserta Aí — manutenção caseira</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EDEEE7;
+    --surface:#FFFFFF;
+    --surface-alt:#E2E4DC;
+    --ink:#1F2420;
+    --ink-soft:#5B6158;
+    --accent:#E3A72E;
+    --accent-ink:#3A2A06;
+    --accent-dim:#F3D998;
+    --risk-high:#B23A2E;
+    --risk-high-bg:#F7E4E1;
+    --risk-med:#B4691F;
+    --risk-med-bg:#F8E9D8;
+    --risk-low:#4F6E49;
+    --risk-low-bg:#E6EEE1;
+    --border:#D6D7CB;
+    --radius-s:6px;
+    --radius-m:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    max-width:460px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    padding:20px 18px 60px;
+  }
+  header.top{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .mark{
+    width:38px;height:38px;
+    background:var(--accent);
+    border-radius:var(--radius-s);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:18px;
+    color:var(--accent-ink);
+    flex-shrink:0;
+    transform:rotate(-3deg);
+  }
+  .brand{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:-0.01em;
+  }
+  .brand small{
+    display:block;
+    font-family:'Inter',sans-serif;
+    font-weight:400;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:1px;
+  }
+  .settings-btn{
+    margin-left:auto;
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-s);
+    width:36px;height:36px;
+    font-size:16px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+
+  /* Tela de configuração das chaves */
+  #setupView{display:none;}
+  .key-card{
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-m);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .key-card-head{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .key-step{
+    flex-shrink:0;
+    width:24px;height:24px;
+    border-radius:50%;
+    background:var(--accent);
+    color:var(--accent-ink);
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .key-title{
+    font-weight:600;
+    font-size:14.5px;
+    margin:0 0 3px;
+  }
+  .key-tag{
+    display:inline-block;
+    font-size:11px;
+    font-weight:600;
+    padding:2px 7px;
+    border-radius:999px;
+    margin-left:4px;
+    vertical-align:middle;
+  }
+  .key-tag-req{background:var(--risk-high-bg);color:var(--risk-high);}
+  .key-tag-opt{background:var(--surface-alt);color:var(--ink-soft);}
+  .key-desc{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0;
+    line-height:1.45;
+  }
+  .key-steps{
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.7;
+    margin:10px 0 12px;
+    padding-left:20px;
+  }
+  .key-steps a{color:var(--risk-med);font-weight:600;text-decoration:none;}
+  .key-steps code{
+    background:var(--surface-alt);
+    padding:1px 5px;
+    border-radius:4px;
+    font-size:12px;
+  }
+  .key-input{width:100%;font-family:monospace;font-size:12.5px;}
+  .key-footnote{
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.5;
+    margin-top:12px;
+    text-align:center;
+  }
+
+  .hero h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:25px;
+    line-height:1.28;
+    font-weight:600;
+    margin:0 0 6px;
+    max-width:22ch;
+  }
+  .hero p{
+    color:var(--ink-soft);
+    font-size:14.5px;
+    line-height:1.5;
+    margin:0 0 22px;
+    max-width:36ch;
+  }
+
+  .field-label{
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+    margin:0 0 9px;
+  }
+
+  .chips{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:4px;
+    margin-bottom:20px;
+    scrollbar-width:none;
+  }
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:9px 13px;
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:999px;
+    font-size:13.5px;
+    font-weight:500;
+    color:var(--ink);
+    cursor:pointer;
+    transition:background .15s, border-color .15s, transform .1s;
+    user-select:none;
+  }
+  .chip .ico{font-size:16px;}
+  .chip:active{transform:scale(.96);}
+  .chip.selected{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:var(--accent-ink);
+    font-weight:600;
+  }
+
+  textarea{
+    width:100%;
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-m);
+    padding:13px 14px;
+    font-family:'Inter',sans-serif;
+    font-size:14.5px;
+    color:var(--ink);
+    resize:vertical;
+    min-height:90px;
+    margin-bottom:16px;
+  }
+  textarea:focus, .photo-btn:focus-visible, .chip:focus-visible, button:focus-visible{
+    outline:2px solid var(--accent-ink);
+    outline-offset:2px;
+  }
+  textarea::placeholder{color:#9A9E92;}
+
+  .photo-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .detail-input{
+    flex:1;
+    min-width:0;
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-m);
+    padding:11px 13px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    color:var(--ink);
+  }
+  .detail-input::placeholder{color:#9A9E92;}
+  .photo-btn{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--surface);
+    border:1.5px dashed var(--border);
+    border-radius:var(--radius-m);
+    padding:12px 14px;
+    font-size:13.5px;
+    font-weight:500;
+    color:var(--ink-soft);
+    cursor:pointer;
+    flex:1;
+  }
+  .photo-preview{
+    width:52px;height:52px;
+    border-radius:var(--radius-s);
+    object-fit:cover;
+    border:1.5px solid var(--border);
+    display:none;
+  }
+  .photo-remove{
+    display:none;
+    background:none;border:none;
+    color:var(--risk-high);
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    padding:4px;
+  }
+
+  .cta{
+    width:100%;
+    background:var(--ink);
+    color:#F5F3EC;
+    border:none;
+    border-radius:var(--radius-m);
+    padding:15px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15.5px;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:opacity .15s;
+  }
+  .cta:disabled{opacity:.55;cursor:default;}
+  .cta:active:not(:disabled){opacity:.85;}
+
+  .spinner{
+    width:15px;height:15px;
+    border:2px solid rgba(245,243,236,.35);
+    border-top-color:#F5F3EC;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+    display:none;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .error-box{
+    display:none;
+    background:var(--risk-high-bg);
+    color:var(--risk-high);
+    border-radius:var(--radius-m);
+    padding:13px 14px;
+    font-size:13.5px;
+    margin-top:14px;
+    line-height:1.5;
+  }
+
+  /* Resultado */
+  #result{display:none;margin-top:28px;}
+  #formView{display:none;}
+  .result-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .result-head h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:19px;
+    font-weight:600;
+    margin:0;
+    line-height:1.3;
+    max-width:26ch;
+  }
+  .pill{
+    flex-shrink:0;
+    font-size:11.5px;
+    font-weight:700;
+    padding:5px 10px;
+    border-radius:999px;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+    white-space:nowrap;
+  }
+  .pill.baixo{background:var(--risk-low-bg);color:var(--risk-low);}
+  .pill.medio{background:var(--risk-med-bg);color:var(--risk-med);}
+  .pill.alto{background:var(--risk-high-bg);color:var(--risk-high);}
+
+  .meta-row{
+    display:flex;
+    gap:16px;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:18px;
+  }
+  .meta-row b{color:var(--ink);font-weight:600;}
+
+  .safety-banner{
+    display:none;
+    background:var(--risk-high-bg);
+    border-left:4px solid var(--risk-high);
+    border-radius:var(--radius-s);
+    padding:14px 15px;
+    margin-bottom:20px;
+  }
+  .safety-banner .t{
+    font-weight:700;
+    color:var(--risk-high);
+    font-size:14px;
+    margin-bottom:4px;
+  }
+  .safety-banner p{
+    margin:0;
+    font-size:13.5px;
+    color:#5c2721;
+    line-height:1.5;
+  }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-m);
+    padding:16px 16px 6px;
+    margin-bottom:14px;
+  }
+  .card h3{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    margin:0 0 10px;
+  }
+  .check-list{list-style:none;margin:0;padding:0;}
+  .check-list li{
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    font-size:14px;
+    padding:8px 0;
+    border-bottom:1px solid var(--surface-alt);
+    line-height:1.4;
+  }
+  .check-list li:last-child{border-bottom:none;}
+  .check-list li::before{
+    content:"";
+    width:15px;height:15px;
+    margin-top:2px;
+    flex-shrink:0;
+    border:1.5px solid var(--ink-soft);
+    border-radius:4px;
+  }
+
+  .steps{list-style:none;margin:0;padding:0;position:relative;}
+  .steps li{
+    display:flex;
+    gap:12px;
+    padding-bottom:18px;
+    position:relative;
+  }
+  .steps li:last-child{padding-bottom:8px;}
+  .steps li::before{
+    content:"";
+    position:absolute;
+    left:11px;top:26px;bottom:0;
+    width:1.5px;
+    background:var(--surface-alt);
+  }
+  .steps li:last-child::before{display:none;}
+  .step-num{
+    flex-shrink:0;
+    width:23px;height:23px;
+    border-radius:50%;
+    background:var(--ink);
+    color:#F5F3EC;
+    font-size:11.5px;
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Grotesk',sans-serif;
+    z-index:1;
+  }
+  .step-text{font-size:14px;line-height:1.5;padding-top:2px;}
+
+  /* Video cards — clicáveis para abrir modal */
+  .video-card{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    text-decoration:none;
+    color:var(--ink);
+    padding:10px 0;
+    border-bottom:1px solid var(--surface-alt);
+    cursor:pointer;
+    background:none;
+    border-left:none;
+    border-right:none;
+    border-top:none;
+    width:100%;
+    text-align:left;
+    transition:background .12s;
+    border-radius:0;
+  }
+  .video-card:last-of-type{border-bottom:none;}
+  .video-card:hover, .video-card:focus-visible{
+    background:var(--surface-alt);
+    border-radius:var(--radius-s);
+    outline:none;
+  }
+  .video-play{
+    flex-shrink:0;
+    width:34px;height:34px;
+    border-radius:50%;
+    background:var(--ink);
+    color:#F5F3EC;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;
+    margin-top:1px;
+    transition:background .12s;
+  }
+  .video-card:hover .video-play{background:var(--risk-high);}
+  .video-info{flex:1;min-width:0;}
+  .video-title{
+    font-size:13.5px;font-weight:600;line-height:1.4;
+    display:block;
+  }
+  .video-channel{
+    font-size:12px;color:var(--ink-soft);margin-top:2px;
+    display:block;
+  }
+  .video-badge{
+    display:inline-block;
+    margin-top:5px;
+    font-size:11px;
+    font-weight:700;
+    color:var(--risk-low);
+    background:var(--risk-low-bg);
+    padding:2px 8px;
+    border-radius:999px;
+  }
+  .video-empty{font-size:13.5px;color:var(--ink-soft);padding:6px 0 4px;}
+  .video-fallback{
+    display:block;
+    margin-top:10px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    text-decoration:underline;
+  }
+
+  /* ── Banner aviso ambiente local ── */
+  .env-warning{
+    display:none;
+    background:var(--risk-med-bg);
+    border-left:4px solid var(--risk-med);
+    border-radius:var(--radius-s);
+    padding:12px 14px;
+    font-size:13px;
+    line-height:1.5;
+    color:#5a3410;
+    margin-bottom:16px;
+  }
+  .env-warning b{font-weight:700;}
+  .env-warning.show{display:block;}
+
+  /* ── Modal de vídeo ── */
+  .video-modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(15,18,14,.72);
+    z-index:1000;
+    align-items:flex-end;
+    justify-content:center;
+    backdrop-filter:blur(3px);
+  }
+  .video-modal-overlay.open{
+    display:flex;
+    animation:fadeIn .18s ease;
+  }
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .video-modal{
+    width:100%;
+    max-width:460px;
+    background:var(--ink);
+    border-radius:var(--radius-m) var(--radius-m) 0 0;
+    overflow:hidden;
+    animation:slideUp .22s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes slideUp{from{transform:translateY(60px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .video-modal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px 10px;
+    gap:10px;
+  }
+  .video-modal-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    color:#F5F3EC;
+    line-height:1.3;
+    flex:1;
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .video-modal-close{
+    background:rgba(255,255,255,.12);
+    border:none;
+    color:#F5F3EC;
+    width:30px;height:30px;
+    border-radius:50%;
+    font-size:16px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    transition:background .12s;
+  }
+  .video-modal-close:hover{background:rgba(255,255,255,.22);}
+  .video-embed-wrap{
+    position:relative;
+    width:100%;
+    padding-bottom:56.25%; /* 16:9 */
+    background:#000;
+  }
+  .video-embed-wrap iframe{
+    position:absolute;
+    inset:0;
+    width:100%;height:100%;
+    border:none;
+  }
+  .video-modal-footer{
+    padding:12px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .video-modal-channel{
+    font-size:12px;
+    color:rgba(245,243,236,.55);
+  }
+  .video-open-yt{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12.5px;
+    font-weight:600;
+    color:#F5F3EC;
+    text-decoration:none;
+    background:rgba(255,255,255,.1);
+    padding:6px 10px;
+    border-radius:var(--radius-s);
+    white-space:nowrap;
+    transition:background .12s;
+  }
+  .video-open-yt:hover{background:rgba(255,255,255,.18);}
+  /* fallback quando embed é bloqueado */
+  .video-embed-fallback{
+    display:none;
+    position:absolute;
+    inset:0;
+    background:#111;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    padding:20px;
+    text-align:center;
+  }
+  .video-embed-fallback.show{display:flex;}
+  .video-embed-fallback p{
+    color:rgba(245,243,236,.7);
+    font-size:13px;
+    margin:0;
+    line-height:1.5;
+  }
+  .video-embed-fallback a{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--accent);
+    color:var(--accent-ink);
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    padding:12px 20px;
+    border-radius:var(--radius-m);
+    text-decoration:none;
+  }
+  /* ── fim modal ── */
+
+  .feedback-buttons{display:flex;gap:10px;}
+  .fb-btn{
+    flex:1;
+    background:var(--surface-alt);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-m);
+    padding:10px;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .fb-btn.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .video-vote-btn{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:var(--surface-alt);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-s);
+    padding:9px 12px;
+    font-size:13px;
+    color:var(--ink);
+    margin-bottom:7px;
+    cursor:pointer;
+  }
+  .video-vote-btn.voted{background:var(--risk-low-bg);border-color:var(--risk-low);color:var(--risk-low);font-weight:600;}
+  .fb-thanks{font-size:13px;color:var(--risk-low);font-weight:600;margin:10px 0 2px;}
+
+  .reset-btn{
+    display:block;
+    width:100%;
+    background:none;
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-m);
+    padding:12px;
+    font-size:13.5px;
+    font-weight:500;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+
+  footer.note{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:30px;
+    line-height:1.6;
+  }
+
+  /* Sugestão de vídeo — seção separada com modal */
+  .suggest-video-btn{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    width:100%;
+    background:none;
+    border:1.5px dashed var(--border);
+    border-radius:var(--radius-s);
+    padding:9px 12px;
+    font-size:13px;
+    color:var(--ink-soft);
+    font-weight:500;
+    cursor:pointer;
+    margin-top:8px;
+    margin-bottom:4px;
+    transition:border-color .15s, color .15s;
+  }
+  .suggest-video-btn:hover{border-color:var(--ink-soft);color:var(--ink);}
+
+  /* Modal de sugestão de vídeo */
+  .suggest-modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(15,18,14,.6);
+    z-index:1100;
+    align-items:flex-end;
+    justify-content:center;
+    backdrop-filter:blur(3px);
+  }
+  .suggest-modal-overlay.open{display:flex;animation:fadeIn .18s ease;}
+  .suggest-modal{
+    width:100%;
+    max-width:460px;
+    background:var(--surface);
+    border-radius:var(--radius-m) var(--radius-m) 0 0;
+    padding:20px 18px 30px;
+    animation:slideUp .22s cubic-bezier(.4,0,.2,1);
+  }
+  .suggest-modal h3{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:16px;
+    font-weight:600;
+    margin:0 0 6px;
+  }
+  .suggest-modal p{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+    line-height:1.5;
+  }
+  .suggest-modal input[type="url"],
+  .suggest-modal input[type="text"]{
+    width:100%;
+    background:var(--bg);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-m);
+    padding:11px 13px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    margin-bottom:10px;
+  }
+  .suggest-modal input::placeholder{color:#9A9E92;}
+  .suggest-modal-actions{display:flex;gap:10px;margin-top:4px;}
+  .suggest-submit{
+    flex:1;
+    background:var(--ink);
+    color:#F5F3EC;
+    border:none;
+    border-radius:var(--radius-m);
+    padding:12px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .suggest-cancel{
+    background:var(--surface-alt);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-m);
+    padding:12px 18px;
+    font-size:14px;
+    font-weight:500;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .suggest-preview{
+    display:none;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:var(--radius-s);
+    padding:10px 12px;
+    font-size:13px;
+    color:var(--ink);
+    margin-bottom:10px;
+    line-height:1.5;
+  }
+  .suggest-preview span{font-weight:600;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="mark">CA</div>
+    <div class="brand">Conserta Aí<small>manutenção caseira, sem gastar com técnico</small></div>
+    <button class="settings-btn" id="settingsBtn" title="Configurar chaves de API" aria-label="Configurar chaves de API">⚙️</button>
+  </header>
+
+  <!-- aviso ambiente local -->
+  <div class="env-warning" id="envWarning">
+    <b>⚠️ Rodando como arquivo local</b> — para usar o app normalmente, hospede-o em um servidor (GitHub Pages, Netlify, etc.). Nesse ambiente, a API e o player de vídeo podem ser bloqueados pelo navegador.
+  </div>
+
+  <div id="setupView">
+    <div class="hero">
+      <h1>Antes de começar, configure suas chaves de API</h1>
+      <p>O Conserta Aí usa duas APIs gratuitas pra funcionar. Leva uns 2 minutos pra pegar as chaves — você só faz isso uma vez, elas ficam salvas neste navegador.</p>
+    </div>
+
+    <div class="key-card">
+      <div class="key-card-head">
+        <span class="key-step">1</span>
+        <div>
+          <p class="key-title">Chave do Google Gemini <span class="key-tag key-tag-req">obrigatória</span></p>
+          <p class="key-desc">Faz o diagnóstico do problema (foto ou texto). Grátis, sem cartão de crédito.</p>
+        </div>
+      </div>
+      <ol class="key-steps">
+        <li>Acesse <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey ↗</a></li>
+        <li>Entre com uma conta Google</li>
+        <li>Clique em <b>Create API key</b></li>
+        <li>Copie a chave (começa com <code>AIza</code>) e cole abaixo</li>
+      </ol>
+      <input type="password" id="geminiKeyInput" class="detail-input key-input" placeholder="Cole sua chave do Gemini aqui" autocomplete="off">
+    </div>
+
+    <div class="key-card">
+      <div class="key-card-head">
+        <span class="key-step">2</span>
+        <div>
+          <p class="key-title">Chave do Serper <span class="key-tag key-tag-opt">opcional</span></p>
+          <p class="key-desc">Busca vídeos reais do YouTube pro reparo. Sem ela o app funciona igual, só sem sugestão de vídeo. Plano grátis: 2.500 buscas/mês.</p>
+        </div>
+      </div>
+      <ol class="key-steps">
+        <li>Acesse <a href="https://serper.dev" target="_blank" rel="noopener">serper.dev ↗</a></li>
+        <li>Crie uma conta grátis (sem cartão)</li>
+        <li>Copie a chave (começa com letras e números) e cole abaixo</li>
+      </ol>
+      <input type="password" id="serperKeyInput" class="detail-input key-input" placeholder="Cole sua chave do Serper aqui (opcional)" autocomplete="off" style="margin-bottom:8px;">
+      <input type="password" id="serperKey2Input" class="detail-input key-input" placeholder="Segunda chave do Serper (opcional, backup)" autocomplete="off">
+    </div>
+
+    <button class="cta" id="saveKeysBtn">Salvar e começar</button>
+    <div class="error-box" id="setupError"></div>
+    <p class="key-footnote">🔒 Suas chaves ficam salvas só neste navegador — não passam por nenhum servidor nosso, só vão direto pra Google e pro Serper quando você usa o app.</p>
+  </div>
+
+  <div id="formView">
+    <div class="hero">
+      <h1>Descreva o problema e veja se dá pra resolver em casa</h1>
+      <p>Escolha a categoria, conte o que está acontecendo ou mande uma foto. A gente te diz o risco, as ferramentas e o passo a passo.</p>
+    </div>
+
+    <p class="field-label">Categoria (opcional)</p>
+    <div class="chips" id="chips">
+      <div class="chip" data-cat="Automotivo"><span class="ico">🚗</span>Automotivo</div>
+      <div class="chip" data-cat="Elétrica"><span class="ico">⚡</span>Elétrica</div>
+      <div class="chip" data-cat="Hidráulica"><span class="ico">🚰</span>Hidráulica</div>
+      <div class="chip" data-cat="Eletrodomésticos"><span class="ico">🧊</span>Eletrodomésticos</div>
+      <div class="chip" data-cat="Móveis"><span class="ico">🪑</span>Móveis</div>
+      <div class="chip" data-cat="Eletrônicos"><span class="ico">📱</span>Eletrônicos</div>
+    </div>
+
+    <p class="field-label">O que está acontecendo?</p>
+    <textarea id="descInput" placeholder="Ex: a torneira da cozinha não para de pingar, mesmo fechada com força..."></textarea>
+
+    <p class="field-label">Mais detalhes (opcional, ajuda a acertar o diagnóstico)</p>
+    <div class="photo-row" style="margin-bottom:16px;">
+      <input type="text" id="marcaInput" class="detail-input" placeholder="Marca / modelo">
+      <input type="text" id="idadeInput" class="detail-input" placeholder="Ano ou tempo de uso">
+    </div>
+
+    <p class="field-label">Foto (opcional)</p>
+    <div class="photo-row" style="margin-bottom:10px;">
+      <label class="photo-btn" id="cameraBtn">
+        📷 Tirar foto
+        <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none">
+      </label>
+      <label class="photo-btn" id="galleryBtn">
+        🖼️ Da galeria
+        <input type="file" accept="image/*" id="galleryInput" style="display:none">
+      </label>
+    </div>
+    <div class="photo-row">
+      <img id="photoPreview" class="photo-preview" alt="Pré-visualização da foto">
+      <span id="photoLabel" style="font-size:12.5px;color:var(--ink-soft);"></span>
+      <button class="photo-remove" id="photoRemove">Remover</button>
+    </div>
+
+    <button class="cta" id="submitBtn">
+      <span class="spinner" id="spinner"></span>
+      <span id="ctaLabel">Diagnosticar</span>
+    </button>
+
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <div id="result">
+    <div class="result-head">
+      <h2 id="resProblema"></h2>
+      <span class="pill" id="resRiscoPill"></span>
+    </div>
+    <div class="meta-row">
+      <span><b id="resCategoria"></b></span>
+      <span>Dificuldade: <b id="resDificuldade"></b></span>
+    </div>
+
+    <div class="safety-banner" id="safetyBanner">
+      <div class="t">Procure um profissional</div>
+      <p id="safetyText"></p>
+    </div>
+
+    <div id="resultBody">
+      <div class="card">
+        <h3>Ferramentas necessárias</h3>
+        <ul class="check-list" id="resFerramentas"></ul>
+      </div>
+
+      <div class="card">
+        <h3>Peças</h3>
+        <ul class="check-list" id="resPecas"></ul>
+      </div>
+
+      <div class="card">
+        <h3>Passo a passo</h3>
+        <ol class="steps" id="resPassos"></ol>
+      </div>
+
+      <div class="card" id="videosCard">
+        <h3>Vídeos que podem ajudar</h3>
+        <div id="resVideos"></div>
+        <a class="video-fallback" id="resVideoFallback" href="#" target="_blank" rel="noopener">Nenhum desses ajudou? Buscar mais no YouTube →</a>
+        <button class="suggest-video-btn" id="suggestVideoBtn">＋ Indicar um vídeo que ajudou</button>
+      </div>
+
+      <div class="card feedback-card" id="feedbackCard">
+        <h3>Isso ajudou a resolver o problema?</h3>
+        <div class="feedback-buttons" id="fbButtons">
+          <button class="fb-btn" data-fb="up">👍 Ajudou</button>
+          <button class="fb-btn" data-fb="down">👎 Não ajudou</button>
+        </div>
+        <div id="videoVoteSection" style="display:none;">
+          <p class="field-label" style="margin-top:14px;">Qual vídeo resolveu?</p>
+          <div id="videoVoteOptions"></div>
+        </div>
+        <p class="fb-thanks" id="fbThanks" style="display:none;">Valeu! Isso ajuda outras pessoas com o mesmo problema. 🙌</p>
+      </div>
+    </div>
+
+    <button class="reset-btn" id="resetBtn">Fazer novo diagnóstico</button>
+  </div>
+
+  <footer class="note">
+    O diagnóstico é gerado por IA e serve como orientação inicial — em caso de dúvida sobre segurança, procure sempre um profissional qualificado.<br>
+    As avaliações de vídeo são compartilhadas entre todos os usuários do app.
+  </footer>
+
+</div>
+
+<!-- ── Modal player de vídeo ── -->
+<div class="video-modal-overlay" id="videoModalOverlay" role="dialog" aria-modal="true" aria-label="Reprodutor de vídeo">
+  <div class="video-modal" id="videoModal">
+    <div class="video-modal-header">
+      <span class="video-modal-title" id="videoModalTitle"></span>
+      <button class="video-modal-close" id="videoModalClose" aria-label="Fechar vídeo">✕</button>
+    </div>
+    <div class="video-embed-wrap">
+      <iframe
+        id="videoIframe"
+        src=""
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        title="Tutorial de reparo"
+        loading="lazy">
+      </iframe>
+      <!-- mostrado se o iframe for bloqueado (file://, CORS, etc.) -->
+      <div class="video-embed-fallback" id="videoEmbedFallback">
+        <p>O player foi bloqueado pelo navegador.<br>Isso acontece ao abrir o arquivo localmente.</p>
+        <a id="videoFallbackLink" href="#" target="_blank" rel="noopener">▶ Assistir no YouTube</a>
+      </div>
+    </div>
+    <div class="video-modal-footer">
+      <span class="video-modal-channel" id="videoModalChannel"></span>
+      <a class="video-open-yt" id="videoOpenYt" href="#" target="_blank" rel="noopener">
+        ↗ Abrir no YouTube
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal de sugestão de vídeo ── -->
+<div class="suggest-modal-overlay" id="suggestModalOverlay" role="dialog" aria-modal="true" aria-label="Indicar vídeo">
+  <div class="suggest-modal">
+    <h3>Indicar um vídeo</h3>
+    <p>Cole o link de um vídeo do YouTube que te ajudou com esse problema. Ele pode aparecer para outras pessoas.</p>
+    <input type="url" id="suggestUrlInput" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+    <div class="suggest-preview" id="suggestPreview"></div>
+    <input type="text" id="suggestTitleInput" placeholder="Título do vídeo (opcional)" autocomplete="off">
+    <div class="suggest-modal-actions">
+      <button class="suggest-cancel" id="suggestCancel">Cancelar</button>
+      <button class="suggest-submit" id="suggestSubmit">Enviar indicação</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Gerenciamento das chaves de API do usuário (salvas no navegador dele) ──
+  const LS_GEMINI  = 'consertaai_gemini_key';
+  const LS_SERPER1 = 'consertaai_serper_key1';
+  const LS_SERPER2 = 'consertaai_serper_key2';
+
+  function getGeminiKey()  { return (localStorage.getItem(LS_GEMINI)  || '').trim(); }
+  function getSerperKeys() {
+    return [localStorage.getItem(LS_SERPER1), localStorage.getItem(LS_SERPER2)]
+      .map(k => (k || '').trim())
+      .filter(Boolean);
+  }
+
+  const setupView  = document.getElementById('setupView');
+  const formViewEl = document.getElementById('formView');
+  const resultEl   = document.getElementById('result');
+  const geminiKeyInput  = document.getElementById('geminiKeyInput');
+  const serperKeyInput  = document.getElementById('serperKeyInput');
+  const serperKey2Input = document.getElementById('serperKey2Input');
+  const setupError      = document.getElementById('setupError');
+  const settingsBtn     = document.getElementById('settingsBtn');
+
+  function showSetup() {
+    geminiKeyInput.value  = getGeminiKey();
+    const sKeys = getSerperKeys();
+    serperKeyInput.value  = sKeys[0] || '';
+    serperKey2Input.value = sKeys[1] || '';
+    setupError.style.display = 'none';
+    setupView.style.display  = 'block';
+    formViewEl.style.display = 'none';
+    resultEl.style.display   = 'none';
+  }
+
+  function showForm() {
+    setupView.style.display  = 'none';
+    formViewEl.style.display = 'block';
+  }
+
+  document.getElementById('saveKeysBtn').addEventListener('click', () => {
+    const gemini = geminiKeyInput.value.trim();
+    if (!gemini) {
+      setupError.textContent = 'A chave do Gemini é obrigatória — sem ela o diagnóstico não funciona.';
+      setupError.style.display = 'block';
+      return;
+    }
+    localStorage.setItem(LS_GEMINI, gemini);
+    localStorage.setItem(LS_SERPER1, serperKeyInput.value.trim());
+    localStorage.setItem(LS_SERPER2, serperKey2Input.value.trim());
+    showForm();
+  });
+
+  settingsBtn.addEventListener('click', showSetup);
+
+  // Primeira visita (ou chave apagada): pede a configuração antes de mostrar o app
+  if (!getGeminiKey()) {
+    showSetup();
+  } else {
+    showForm();
+  }
+
+  // ── Detecta ambiente local (file://) ──
+  const isLocalFile = location.protocol === 'file:';
+  if (isLocalFile) {
+    document.getElementById('envWarning').classList.add('show');
+  }
+
+  let selectedCategory = null;
+  let photoBase64 = null;
+  let photoMediaType = null;
+
+  const chips = document.querySelectorAll('.chip');
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const already = chip.classList.contains('selected');
+      chips.forEach(c => c.classList.remove('selected'));
+      if (!already) {
+        chip.classList.add('selected');
+        selectedCategory = chip.dataset.cat;
+      } else {
+        selectedCategory = null;
+      }
+    });
+  });
+
+  const cameraInput = document.getElementById('cameraInput');
+  const galleryInput = document.getElementById('galleryInput');
+  const photoPreview = document.getElementById('photoPreview');
+  const photoLabel = document.getElementById('photoLabel');
+  const photoRemove = document.getElementById('photoRemove');
+
+  function handlePhotoFile(file) {
+    if (!file) return;
+    photoMediaType = file.type;
+    const reader = new FileReader();
+    reader.onload = () => {
+      photoBase64 = reader.result.split(',')[1];
+      photoPreview.src = reader.result;
+      photoPreview.style.display = 'block';
+      photoRemove.style.display = 'inline-block';
+      photoLabel.textContent = file.name.length > 18 ? file.name.slice(0,15) + '…' : file.name;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  cameraInput.addEventListener('change', () => handlePhotoFile(cameraInput.files[0]));
+  galleryInput.addEventListener('change', () => handlePhotoFile(galleryInput.files[0]));
+
+  photoRemove.addEventListener('click', () => {
+    photoBase64 = null;
+    photoMediaType = null;
+    cameraInput.value = '';
+    galleryInput.value = '';
+    photoPreview.style.display = 'none';
+    photoRemove.style.display = 'none';
+    photoLabel.textContent = '';
+  });
+
+  // ── Extrai ID do YouTube de qualquer formato de URL ──
+  function extractYouTubeId(url) {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      // youtube.com/watch?v=ID
+      if (u.hostname.includes('youtube.com') && u.searchParams.get('v')) {
+        return u.searchParams.get('v');
+      }
+      // youtu.be/ID
+      if (u.hostname === 'youtu.be') {
+        return u.pathname.slice(1).split('?')[0];
+      }
+      // youtube.com/embed/ID
+      if (u.hostname.includes('youtube.com') && u.pathname.startsWith('/embed/')) {
+        return u.pathname.split('/embed/')[1].split('?')[0];
+      }
+      // youtube.com/shorts/ID
+      if (u.hostname.includes('youtube.com') && u.pathname.startsWith('/shorts/')) {
+        return u.pathname.split('/shorts/')[1].split('?')[0];
+      }
+    } catch (e) {
+      // tenta regex de fallback
+      const m = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
+      return m ? m[1] : null;
+    }
+    return null;
+  }
+
+  // ── Modal player ──
+  const videoModalOverlay   = document.getElementById('videoModalOverlay');
+  const videoModalClose     = document.getElementById('videoModalClose');
+  const videoModalTitle     = document.getElementById('videoModalTitle');
+  const videoModalChannel   = document.getElementById('videoModalChannel');
+  const videoOpenYt         = document.getElementById('videoOpenYt');
+  const videoIframe         = document.getElementById('videoIframe');
+  const videoEmbedFallback  = document.getElementById('videoEmbedFallback');
+  const videoFallbackLink   = document.getElementById('videoFallbackLink');
+
+  let iframeLoadTimer = null;
+
+  function showEmbedFallback(ytUrl) {
+    videoIframe.style.display = 'none';
+    videoFallbackLink.href = ytUrl;
+    videoEmbedFallback.classList.add('show');
+  }
+
+  function hideEmbedFallback() {
+    videoIframe.style.display = '';
+    videoEmbedFallback.classList.remove('show');
+  }
+
+  function openVideoModal(video) {
+    const ytId = extractYouTubeId(video.url);
+    if (!ytId) {
+      // URL inválida ou não-YouTube: abre no navegador como fallback
+      window.open(video.url, '_blank', 'noopener');
+      return;
+    }
+
+    videoModalTitle.textContent   = video.titulo || 'Tutorial';
+    videoModalChannel.textContent = video.canal  || '';
+    videoOpenYt.href = video.url;
+    videoFallbackLink.href = video.url;
+
+    hideEmbedFallback();
+
+    if (isLocalFile) {
+      // Em file:// o iframe sempre é bloqueado — mostra fallback direto
+      videoIframe.src = '';
+      showEmbedFallback(video.url);
+    } else {
+      videoIframe.src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`;
+
+      // Timer de segurança: se o iframe não carregou em 6s, mostra fallback
+      clearTimeout(iframeLoadTimer);
+      iframeLoadTimer = setTimeout(() => {
+        // verifica se o iframe tem conteúdo (cross-origin, então só checa se ainda existe src)
+        if (videoIframe.src && videoModalOverlay.classList.contains('open')) {
+          // Tenta detectar erro via contentWindow (pode lançar SecurityError em cross-origin)
+          try {
+            const cw = videoIframe.contentWindow;
+            if (!cw || !cw.document || cw.document.body === null) {
+              showEmbedFallback(video.url);
+            }
+          } catch (e) {
+            // Cross-origin: iframe carregou algo (normal), não mostra fallback
+          }
+        }
+      }, 6000);
+    }
+
+    videoModalOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    videoModalClose.focus();
+  }
+
+  // Se o iframe disparar erro de load (rede, Content-Security-Policy etc.) → fallback
+  videoIframe.addEventListener('error', () => {
+    if (videoModalOverlay.classList.contains('open')) {
+      showEmbedFallback(videoOpenYt.href);
+    }
+  });
+
+  function closeVideoModal() {
+    videoModalOverlay.classList.remove('open');
+    clearTimeout(iframeLoadTimer);
+    // Para o vídeo removendo o src
+    videoIframe.src = '';
+    document.body.style.overflow = '';
+    hideEmbedFallback();
+  }
+
+  videoModalClose.addEventListener('click', closeVideoModal);
+  videoModalOverlay.addEventListener('click', (e) => {
+    if (e.target === videoModalOverlay) closeVideoModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (videoModalOverlay.classList.contains('open')) closeVideoModal();
+      if (suggestModalOverlay.classList.contains('open')) closeSuggestModal();
+    }
+  });
+
+  // ── Modal de sugestão de vídeo ──
+  const suggestModalOverlay = document.getElementById('suggestModalOverlay');
+  const suggestVideoBtn     = document.getElementById('suggestVideoBtn');
+  const suggestCancel       = document.getElementById('suggestCancel');
+  const suggestSubmit       = document.getElementById('suggestSubmit');
+  const suggestUrlInput     = document.getElementById('suggestUrlInput');
+  const suggestTitleInput   = document.getElementById('suggestTitleInput');
+  const suggestPreview      = document.getElementById('suggestPreview');
+
+  suggestVideoBtn.addEventListener('click', () => {
+    suggestUrlInput.value = '';
+    suggestTitleInput.value = '';
+    suggestPreview.style.display = 'none';
+    suggestModalOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => suggestUrlInput.focus(), 80);
+  });
+
+  function closeSuggestModal() {
+    suggestModalOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  suggestCancel.addEventListener('click', closeSuggestModal);
+  suggestModalOverlay.addEventListener('click', (e) => {
+    if (e.target === suggestModalOverlay) closeSuggestModal();
+  });
+
+  // Preview ao colar URL
+  suggestUrlInput.addEventListener('input', () => {
+    const ytId = extractYouTubeId(suggestUrlInput.value.trim());
+    if (ytId) {
+      suggestPreview.style.display = 'block';
+      suggestPreview.innerHTML = `<span>✅ Vídeo reconhecido</span> — ID: <code>${ytId}</code>`;
+    } else {
+      suggestPreview.style.display = suggestUrlInput.value ? 'block' : 'none';
+      suggestPreview.innerHTML = suggestUrlInput.value
+        ? '<span style="color:var(--risk-high)">⚠️ Link não reconhecido. Use um link do YouTube.</span>'
+        : '';
+    }
+  });
+
+  suggestSubmit.addEventListener('click', async () => {
+    const url   = suggestUrlInput.value.trim();
+    const title = suggestTitleInput.value.trim();
+    const ytId  = extractYouTubeId(url);
+    if (!ytId) {
+      suggestPreview.style.display = 'block';
+      suggestPreview.innerHTML = '<span style="color:var(--risk-high)">⚠️ Cole um link válido do YouTube antes de enviar.</span>';
+      return;
+    }
+    // Salva como sugestão da comunidade (mesmo fluxo de voto)
+    const suggestedVideo = { titulo: title || 'Vídeo indicado pela comunidade', canal: '', url };
+    await voteForVideo(suggestedVideo);
+    closeSuggestModal();
+  });
+
+  // ── System prompt ──
+  const SYSTEM_PROMPT = `Você é um assistente de diagnóstico de manutenção caseira para pessoas com dificuldade financeira, que não podem pagar um profissional para todo problema simples do dia a dia.
+
+Categorias possíveis: Automotivo, Elétrica, Hidráulica, Eletrodomésticos, Móveis, Eletrônicos.
+
+Responda SEMPRE e SOMENTE com um objeto JSON válido, sem nenhum texto antes ou depois, sem markdown, com exatamente estas chaves:
+- "problema": string — descrição curta e clara do problema identificado
+- "categoria": string — uma das categorias possíveis
+- "risco": string — exatamente "baixo", "medio" ou "alto"
+- "dificuldade": string — exatamente "facil", "medio" ou "dificil"
+- "ferramentas": array de strings
+- "pecas": array de strings
+- "passo_a_passo": array de strings com os passos numerados
+- "videos": array vazio []
+- "video_busca": string — termo curto e objetivo em português para busca no YouTube (ex: "troca resistência chuveiro elétrico")
+- "aviso_seguranca": string com motivo do risco, ou null se risco for baixo ou medio
+
+REGRA DE SEGURANÇA OBRIGATÓRIA: classifique como "alto" qualquer problema envolvendo freios, combustível, airbag, direção, rede elétrica de alta tensão, disjuntores, gás encanado, estrutura de risco ou qualquer reparo com risco real de vida. Nesses casos, "ferramentas", "pecas" e "passo_a_passo" devem ser arrays VAZIOS, e "aviso_seguranca" deve explicar por que é necessário um profissional. Nunca incentive reparos perigosos para economizar dinheiro.
+
+Para risco baixo ou médio, seja prático e didático como se explicasse para alguém sem experiência técnica.`;
+
+  // ── Busca de vídeos via Serper (endpoint dedicado de YouTube) ──
+  // Plano gratuito: 2.500 queries/mês — serper.dev
+  // Usa as chaves que o usuário configurou na tela inicial.
+  // Se a primeira falhar (cota/auth), tenta a próxima automaticamente.
+  async function buscarVideosSerper(termo) {
+    if (!termo) return [];
+    const serperKeys = getSerperKeys();
+    if (serperKeys.length === 0) return []; // usuário não configurou Serper, tudo bem
+
+    for (let i = 0; i < serperKeys.length; i++) {
+      const key = serperKeys[i];
+      try {
+        const response = await fetch('https://google.serper.dev/videos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-KEY': key
+          },
+          body: JSON.stringify({
+            q: `${termo} tutorial passo a passo`,
+            gl: 'br',
+            hl: 'pt',
+            num: 5
+          })
+        });
+
+        // 401/403 = chave inválida · 429 = cota estourada → tenta a próxima
+        if (response.status === 401 || response.status === 403 || response.status === 429) {
+          console.warn(`Chave Serper #${i + 1} falhou (status ${response.status}), tentando a próxima...`);
+          continue;
+        }
+
+        if (!response.ok) {
+          console.warn('Serper respondeu com erro:', response.status);
+          return [];
+        }
+
+        const data = await response.json();
+        // Serper retorna { videos: [{ title, link, channel, ... }] }
+        return (data.videos || [])
+          .filter(v => extractYouTubeId(v.link))
+          .slice(0, 3)
+          .map(v => ({
+            titulo: v.title  || 'Vídeo tutorial',
+            canal:  v.channel || '',
+            url:    v.link
+          }));
+
+      } catch (e) {
+        console.warn(`Chave Serper #${i + 1} deu erro de rede, tentando a próxima...`, e);
+        continue;
+      }
+    }
+
+    console.error('Nenhuma chave Serper disponível funcionou.');
+    return [];
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  const spinner   = document.getElementById('spinner');
+  const ctaLabel  = document.getElementById('ctaLabel');
+  const errorBox  = document.getElementById('errorBox');
+
+  submitBtn.addEventListener('click', async () => {
+    const desc = document.getElementById('descInput').value.trim();
+    if (!desc && !photoBase64) {
+      showError('Descreva o problema ou anexe uma foto para continuar.');
+      return;
+    }
+
+    errorBox.style.display = 'none';
+    submitBtn.disabled = true;
+    spinner.style.display = 'inline-block';
+    ctaLabel.textContent = 'Analisando...';
+
+    try {
+      const content = [];
+      if (photoBase64) {
+        content.push({
+          inline_data: { mime_type: photoMediaType, data: photoBase64 }
+        });
+      }
+      let userText = desc || 'Veja a foto anexada e identifique o problema.';
+      if (selectedCategory) userText += `\n\n(Categoria informada pelo usuário: ${selectedCategory})`;
+      const marca = document.getElementById('marcaInput').value.trim();
+      const idade = document.getElementById('idadeInput').value.trim();
+      if (marca) userText += `\nMarca/modelo informado: ${marca}`;
+      if (idade) userText += `\nAno ou tempo de uso informado: ${idade}`;
+      content.push({ text: userText });
+
+      // Chave configurada pelo próprio usuário na tela inicial
+      const API_KEY = getGeminiKey();
+      if (!API_KEY) {
+        showSetup();
+        throw new Error('Configure sua chave do Gemini para continuar.');
+      }
+      // Lista de modelos em ordem de preferência — se um falhar com 503/429, tenta o próximo
+      const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.0-flash-lite'];
+
+      // Tenta cada modelo em sequência — fallback automático em 503/429
+      const safeKey = encodeURIComponent(API_KEY);
+      let response = null;
+      let lastErr = '';
+      for (const model of GEMINI_MODELS) {
+        const r = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${safeKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+              contents: [{ role: 'user', parts: content }],
+              generationConfig: { maxOutputTokens: 3000 }
+            })
+          }
+        );
+
+        if (r.status === 503 || r.status === 429) {
+          lastErr = `Modelo ${model} sobrecarregado (${r.status}), tentando próximo...`;
+          console.warn(lastErr);
+          continue; // tenta o próximo modelo
+        }
+
+        if (!r.ok) {
+          const errBody = await r.text().catch(() => '');
+          if (r.status === 401 || r.status === 403) {
+            showSetup();
+            setupError.textContent = 'Sua chave do Gemini parece inválida ou expirada. Gere uma nova e cole aqui.';
+            setupError.style.display = 'block';
+          }
+          let errMsg = `Erro ${r.status}`;
+          try {
+            const errJson = JSON.parse(errBody);
+            errMsg += ': ' + (errJson?.error?.message || errBody.slice(0, 120));
+          } catch { errMsg += errBody ? ': ' + errBody.slice(0, 120) : ''; }
+          throw new Error(errMsg);
+        }
+
+        response = r;
+        break; // deu certo, sai do loop
+      }
+
+      if (!response) {
+        throw new Error('Todos os modelos estão sobrecarregados no momento. Tente novamente em alguns segundos.');
+      }
+
+      const data = await response.json();
+
+      // Extrai o texto da resposta do Gemini
+      const rawText = (data.candidates?.[0]?.content?.parts || [])
+        .map(p => p.text || '')
+        .join('');
+
+      if (data.candidates?.[0]?.finishReason === 'MAX_TOKENS') {
+        throw new Error('A resposta da IA foi cortada por limite de tokens. Tente novamente ou aumente o maxOutputTokens no código.');
+      }
+
+      // Remove markdown wrapper e extrai JSON
+      let clean = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+      // Tenta extrair objeto JSON caso venha com texto ao redor
+      const jsonMatch = clean.match(/\{[\s\S]*\}/);
+      if (jsonMatch) clean = jsonMatch[0];
+
+      let parsed;
+      try {
+        parsed = JSON.parse(clean);
+      } catch (parseErr) {
+        console.error('JSON inválido recebido:', clean.slice(0, 300));
+        throw new Error('A IA retornou uma resposta inesperada. Tente descrever o problema com mais detalhes.');
+      }
+
+      // Busca os vídeos reais via Serper (só se o reparo não for de risco alto)
+      if (parsed.risco !== 'alto') {
+        ctaLabel.textContent = 'Buscando vídeos...';
+        parsed.videos = await buscarVideosSerper(parsed.video_busca);
+      }
+
+      await renderResult(parsed);
+    } catch (err) {
+      console.error(err);
+      showError(err.message || 'Não deu para gerar o diagnóstico agora. Tente novamente em instantes.');
+    } finally {
+      submitBtn.disabled = false;
+      spinner.style.display = 'none';
+      ctaLabel.textContent = 'Diagnosticar';
+    }
+  });
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.style.display = 'block';
+  }
+
+  function slugify(str) {
+    return (str || '')
+      .toString()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 80);
+  }
+
+  let currentSlug   = null;
+  let currentVideos = [];
+  let votedThisSession = false;
+
+  async function renderResult(r) {
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('result').style.display   = 'block';
+
+    document.getElementById('resProblema').textContent  = r.problema   || 'Diagnóstico';
+    document.getElementById('resCategoria').textContent = r.categoria  || '—';
+    document.getElementById('resDificuldade').textContent =
+      ({facil:'Fácil', medio:'Média', dificil:'Difícil'})[r.dificuldade] || r.dificuldade || '—';
+
+    const pill = document.getElementById('resRiscoPill');
+    const riscoLabel = ({baixo:'Risco baixo', medio:'Risco médio', alto:'Risco alto'})[r.risco] || r.risco;
+    pill.textContent = riscoLabel;
+    pill.className   = 'pill ' + (r.risco || 'baixo');
+
+    const banner = document.getElementById('safetyBanner');
+    const body   = document.getElementById('resultBody');
+
+    if (r.risco === 'alto') {
+      banner.style.display = 'block';
+      document.getElementById('safetyText').textContent =
+        r.aviso_seguranca || 'Esse tipo de reparo envolve risco de segurança e deve ser feito por um profissional qualificado.';
+      body.style.display = 'none';
+    } else {
+      banner.style.display = 'none';
+      body.style.display   = 'block';
+
+      fillList('resFerramentas', r.ferramentas);
+      fillList('resPecas', r.pecas);
+
+      const stepsEl = document.getElementById('resPassos');
+      stepsEl.innerHTML = '';
+      (r.passo_a_passo || []).forEach((step, i) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="step-num">${i+1}</span><span class="step-text">${escapeHtml(step)}</span>`;
+        stepsEl.appendChild(li);
+      });
+
+      currentSlug   = slugify(r.video_busca || r.problema);
+      currentVideos = Array.isArray(r.videos) ? r.videos.slice(0, 3) : [];
+
+      // Carrega dados da comunidade
+      let communityData = null;
+      try {
+        const stored = await window.storage.get('feedback:' + currentSlug, true);
+        communityData = stored ? JSON.parse(stored.value) : null;
+      } catch (e) {
+        communityData = null;
+      }
+
+      if (communityData && communityData.votes) {
+        const voteEntries = Object.entries(communityData.votes)
+          .sort((a, b) => b[1].count - a[1].count);
+        if (voteEntries.length) {
+          const [topUrl, topData] = voteEntries[0];
+          const existing = currentVideos.find(v => v.url === topUrl);
+          if (existing) {
+            existing._community = topData.count;
+          } else {
+            currentVideos.unshift({
+              titulo: topData.titulo,
+              canal: topData.canal || '',
+              url: topUrl,
+              _community: topData.count
+            });
+            currentVideos = currentVideos.slice(0, 3);
+          }
+          currentVideos.sort((a, b) => (b._community || 0) - (a._community || 0));
+        }
+      }
+
+      renderVideos(currentVideos);
+
+      const fallback = document.getElementById('resVideoFallback');
+      const query = encodeURIComponent(r.video_busca || r.problema || '');
+      fallback.href = `https://www.youtube.com/results?search_query=${query}`;
+
+      resetFeedbackUI();
+    }
+
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  function renderVideos(videos) {
+    const container = document.getElementById('resVideos');
+    container.innerHTML = '';
+
+    if (!videos || videos.length === 0) {
+      const p = document.createElement('p');
+      p.className   = 'video-empty';
+      p.textContent = 'Não achamos um vídeo específico pra esse caso — mas dá pra buscar mais logo abaixo.';
+      container.appendChild(p);
+      return;
+    }
+
+    videos.forEach(v => {
+      const btn = document.createElement('button');
+      btn.className = 'video-card';
+      btn.setAttribute('aria-label', `Assistir: ${v.titulo || 'Vídeo tutorial'}`);
+
+      const ytId = extractYouTubeId(v.url);
+      btn.innerHTML = `
+        <span class="video-play">▶</span>
+        <span class="video-info">
+          <span class="video-title">${escapeHtml(v.titulo || 'Vídeo tutorial')}</span>
+          ${v.canal ? `<span class="video-channel">${escapeHtml(v.canal)}</span>` : ''}
+          ${v._community ? `<span class="video-badge">👍 Recomendado por outros usuários</span>` : ''}
+          ${!ytId ? `<span class="video-channel" style="color:var(--risk-med)">⚠️ Abre no YouTube</span>` : ''}
+        </span>`;
+
+      btn.addEventListener('click', () => openVideoModal(v));
+      container.appendChild(btn);
+    });
+  }
+
+  const fbButtons        = document.getElementById('fbButtons');
+  const videoVoteSection = document.getElementById('videoVoteSection');
+  const videoVoteOptions = document.getElementById('videoVoteOptions');
+  const fbThanks         = document.getElementById('fbThanks');
+
+  function resetFeedbackUI() {
+    votedThisSession = false;
+    fbButtons.style.display = 'flex';
+    fbButtons.querySelectorAll('.fb-btn').forEach(b => b.classList.remove('active'));
+    videoVoteSection.style.display = 'none';
+    videoVoteOptions.innerHTML = '';
+    fbThanks.style.display = 'none';
+  }
+
+  fbButtons.addEventListener('click', (e) => {
+    const btn = e.target.closest('.fb-btn');
+    if (!btn || votedThisSession) return;
+    fbButtons.querySelectorAll('.fb-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (btn.dataset.fb === 'up' && currentVideos.length) {
+      videoVoteSection.style.display = 'block';
+      videoVoteOptions.innerHTML = '';
+      currentVideos.forEach(v => {
+        const vb = document.createElement('button');
+        vb.className   = 'video-vote-btn';
+        vb.textContent = v.titulo || 'Vídeo';
+        vb.addEventListener('click', () => voteForVideo(v));
+        videoVoteOptions.appendChild(vb);
+      });
+      const none = document.createElement('button');
+      none.className   = 'video-vote-btn';
+      none.textContent = 'Resolvi sem vídeo / nenhum ajudou';
+      none.addEventListener('click', finishFeedback);
+      videoVoteOptions.appendChild(none);
+    } else {
+      finishFeedback();
+    }
+  });
+
+  async function voteForVideo(video) {
+    if (votedThisSession) return;
+    votedThisSession = true;
+    try {
+      let data = { votes: {} };
+      try {
+        const stored = await window.storage.get('feedback:' + currentSlug, true);
+        if (stored) data = JSON.parse(stored.value);
+      } catch (e) { /* ainda não existe */ }
+      if (!data.votes) data.votes = {};
+      const entry = data.votes[video.url] || { titulo: video.titulo, canal: video.canal || '', count: 0 };
+      entry.count += 1;
+      entry.titulo = video.titulo || entry.titulo;
+      entry.canal  = video.canal  || entry.canal;
+      data.votes[video.url] = entry;
+      await window.storage.set('feedback:' + currentSlug, JSON.stringify(data), true);
+    } catch (e) {
+      console.error('Não foi possível salvar o voto', e);
+    }
+    finishFeedback();
+  }
+
+  function finishFeedback() {
+    videoVoteSection.style.display = 'none';
+    fbThanks.style.display         = 'block';
+  }
+
+  function fillList(id, items) {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    (items || []).forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      el.appendChild(li);
+    });
+    if (!items || items.length === 0) {
+      const li = document.createElement('li');
+      li.style.opacity = '.6';
+      li.textContent   = 'Nenhum item necessário.';
+      el.appendChild(li);
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    document.getElementById('result').style.display   = 'none';
+    document.getElementById('formView').style.display = 'block';
+    document.getElementById('descInput').value   = '';
+    document.getElementById('marcaInput').value  = '';
+    document.getElementById('idadeInput').value  = '';
+    photoRemove.click();
+    chips.forEach(c => c.classList.remove('selected'));
+    selectedCategory = null;
+    resetFeedbackUI();
+    closeVideoModal();
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+</script>
+</body>
+</html>
