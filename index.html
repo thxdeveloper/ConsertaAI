@@ -30,6 +30,7 @@
     --radius-m:14px;
   }
   *{box-sizing:border-box;}
+  button,input,textarea,select{font-family:inherit;}
   body{
     margin:0;
     background:var(--bg);
@@ -363,6 +364,26 @@
     margin-bottom:18px;
   }
   .meta-row b{color:var(--ink);font-weight:600;}
+
+  .equip{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-m);
+    padding:12px 14px;
+    margin:0 0 16px;
+    font-size:13px;
+    color:var(--ink-soft);
+    line-height:1.45;
+  }
+  .equip b{color:var(--ink);font-weight:600;font-size:14px;}
+  .equip-label{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px;}
+  .equip-refine{display:flex;gap:8px;margin-top:10px;}
+  .equip-refine .detail-input{flex:1;min-width:0;width:auto;margin:0;}
+  .equip-btn{
+    background:var(--accent);color:var(--accent-ink);
+    border:none;border-radius:10px;padding:0 16px;
+    font-weight:600;font-size:13px;cursor:pointer;
+  }
 
   .safety-banner{
     display:none;
@@ -929,6 +950,16 @@
       <span>Dificuldade: <b id="resDificuldade"></b></span>
     </div>
 
+    <div class="equip" id="equipBox" style="display:none">
+      <span class="equip-label">Equipamento identificado</span>
+      <b id="equipNome"></b>
+      <div id="equipSub"></div>
+      <div class="equip-refine" id="equipRefine" style="display:none">
+        <input type="text" id="equipModeloInput" class="detail-input" placeholder="Marca e modelo (veja a etiqueta no aparelho)" autocomplete="off">
+        <button type="button" id="equipRefineBtn" class="equip-btn">Refazer</button>
+      </div>
+    </div>
+
     <div class="safety-banner" id="safetyBanner">
       <div class="t">Procure um profissional</div>
       <p id="safetyText"></p>
@@ -1330,21 +1361,115 @@
 
 Categorias possíveis: Automotivo, Elétrica, Hidráulica, Eletrodomésticos, Móveis, Eletrônicos.
 
+COMO TRABALHAR
+1. Se houver foto, ela é a principal referência: examine o aparelho, leia etiquetas, logotipos, textos impressos e o painel, e observe o estado real (peças soltas, sujeira, oxidação, danos visíveis).
+2. Identifique o equipamento: tipo, marca e modelo. Só informe marca ou modelo se estiverem legíveis na foto, aparecerem no texto do usuário ou forem inequívocos. NUNCA invente nem chute um modelo: se não der para ler, use null.
+3. Se o usuário informou marca/modelo, trate como verdade e use exatamente esse valor.
+4. Adapte o diagnóstico e o passo a passo ao tipo do equipamento (e à marca/modelo, quando conhecidos). Evite instruções genéricas que servem para qualquer aparelho.
+
+FORMATO DA RESPOSTA
 Responda SEMPRE e SOMENTE com um objeto JSON válido, sem nenhum texto antes ou depois, sem markdown, com exatamente estas chaves:
 - "problema": string — descrição curta e clara do problema identificado
 - "categoria": string — uma das categorias possíveis
 - "risco": string — exatamente "baixo", "medio" ou "alto"
 - "dificuldade": string — exatamente "facil", "medio" ou "dificil"
-- "ferramentas": array de strings
-- "pecas": array de strings
-- "passo_a_passo": array de strings com os passos numerados
+- "equipamento": objeto com "tipo" (string, ex.: "caixa de som Bluetooth"), "marca" (string ou null), "modelo" (string ou null) e "origem" (exatamente "foto", "texto do usuario" ou "nao identificado")
+- "sintoma": string — o defeito em poucas palavras (ex.: "liga mas não emite som")
+- "ferramentas": array de strings curtas
+- "pecas": array de strings curtas
+- "passo_a_passo": array de strings (regras abaixo)
 - "videos": array vazio []
-- "video_busca": string — termo curto e objetivo em português para busca no YouTube (ex: "troca resistência chuveiro elétrico")
+- "video_buscas": array com 3 termos de busca para o YouTube em português, do mais específico ao mais geral: (1) tipo + marca + modelo + defeito; (2) tipo + marca + defeito, sem o modelo; (3) tipo + defeito + "como consertar". Se marca ou modelo forem desconhecidos, simplesmente omita-os (nunca escreva "marca desconhecida"). Cada termo com no máximo 8 palavras.
+- "video_busca": string — igual ao primeiro termo de "video_buscas"
 - "aviso_seguranca": string com motivo do risco, ou null se risco for baixo ou medio
 
-REGRA DE SEGURANÇA OBRIGATÓRIA: classifique como "alto" qualquer problema envolvendo freios, combustível, airbag, direção, rede elétrica de alta tensão, disjuntores, gás encanado, estrutura de risco ou qualquer reparo com risco real de vida. Nesses casos, "ferramentas", "pecas" e "passo_a_passo" devem ser arrays VAZIOS, e "aviso_seguranca" deve explicar por que é necessário um profissional. Nunca incentive reparos perigosos para economizar dinheiro.
+REGRAS DO PASSO A PASSO
+- Entre 5 e 8 passos. Cada passo é UMA ação, em frase curta e no imperativo (até 25 palavras).
+- NÃO numere os passos e não escreva "Passo 1": o app já numera sozinho. Sem markdown.
+- Ordem lógica: (1) desligar da energia e tirar da tomada/bateria; (2) testes simples e gratuitos primeiro; (3) inspeção visual; (4) o reparo em si; (5) teste final.
+- Diga o que observar e o que o resultado significa (ex.: "se o fusível estiver escuro ou com o filamento partido, ele queimou").
+- Passos que exijam abrir o aparelho ou mexer em algo energizado devem trazer um aviso curto de segurança no próprio passo.
+- O último passo deve dizer quando parar e procurar um técnico.
+
+REGRA DE SEGURANÇA OBRIGATÓRIA: classifique como "alto" qualquer problema envolvendo freios, combustível, airbag, direção, rede elétrica de alta tensão, disjuntores, gás encanado, estrutura de risco ou qualquer reparo com risco real de vida. Nesses casos, "ferramentas", "pecas" e "passo_a_passo" devem ser arrays VAZIOS, "video_buscas" deve ser [] e "aviso_seguranca" deve explicar por que é necessário um profissional. Nunca incentive reparos perigosos para economizar dinheiro.
 
 Para risco baixo ou médio, seja prático e didático como se explicasse para alguém sem experiência técnica.`;
+
+  // ── Texto: normalização para comparar títulos de vídeo com o equipamento ──
+  const STOPWORDS = new Set(['para','como','sem','com','que','uma','dos','das','nao','mais','muito','esta','esse','essa','aparelho','equipamento','quando','porque','fazer']);
+
+  function norm(s) {
+    return String(s == null ? '' : s).toLowerCase().normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+  function compact(s) { return norm(s).replace(/ /g, ''); }
+  function tokens(s)  { return norm(s).split(' ').filter(w => w.length >= 4 && !STOPWORDS.has(w)); }
+
+  // Valores "vazios" que a IA às vezes devolve como texto
+  function limpo(v) {
+    const s = String(v == null ? '' : v).trim();
+    return /^(null|none|n\/a|nao identificad[oa]|não identificad[oa]|desconhecid[oa]|-+)$/i.test(s) ? '' : s;
+  }
+  function normalizarEquipamento(e) {
+    e = e || {};
+    return { tipo: limpo(e.tipo), marca: limpo(e.marca), modelo: limpo(e.modelo), origem: norm(e.origem) };
+  }
+
+  // Códigos de modelo citados num título (ex.: "CM250", "CM-500", "XR 150")
+  function modelosNoTitulo(titulo) {
+    const out = [];
+    const re = /\b([a-z]{1,5})[\s-]?(\d{2,5})([a-z]{0,2})\b/gi;
+    let m;
+    while ((m = re.exec(titulo)) !== null) {
+      out.push({ prefixo: m[1].toLowerCase(), compacto: (m[1] + m[2] + m[3]).toLowerCase() });
+    }
+    return out;
+  }
+
+  // Nota de relevância de um vídeo para o equipamento diagnosticado
+  function avaliarVideo(v, eq, sintoma) {
+    const titulo = v.titulo || '';
+    const t  = norm(titulo + ' ' + (v.canal || ''));
+    const tc = t.replace(/ /g, '');
+    const modelo = compact(eq.modelo);
+    const marca  = norm(eq.marca);
+    const citados = modelosNoTitulo(titulo);
+    let score = 0, modeloOk = false;
+
+    if (modelo.length >= 3) {
+      if (tc.includes(modelo)) {
+        score += 5; modeloOk = true;
+      } else {
+        const prefixo = (modelo.match(/^[a-z]+/) || [''])[0];
+        const outroModelo = prefixo && citados.some(m =>
+          m.prefixo === prefixo && !m.compacto.includes(modelo) && !modelo.includes(m.compacto));
+        if (outroModelo) return { score: -10, ok: false }; // vídeo de OUTRO modelo da mesma linha
+      }
+    } else if (citados.length) {
+      score -= 3; // modelo desconhecido: um vídeo de modelo específico provavelmente é de outro aparelho
+    }
+
+    if (marca && t.includes(marca)) score += 2;
+    const tipoOk = tokens(eq.tipo).some(w => t.includes(w));
+    if (tipoOk) score += 3;
+    score += Math.min(3, tokens(sintoma).filter(w => t.includes(w)).length);
+
+    return { score, ok: (tipoOk || modeloOk) && score >= 3 };
+  }
+
+  // Consultas da mais específica (com modelo) para a mais geral
+  function montarConsultas(r) {
+    const eq = r.equipamento || {};
+    const sint = String(r.sintoma || '').trim();
+    const locais = [];
+    if (eq.tipo) {
+      if (eq.modelo) locais.push([eq.tipo, eq.marca, eq.modelo, sint].filter(Boolean).join(' '));
+      if (eq.marca)  locais.push([eq.tipo, eq.marca, sint].filter(Boolean).join(' '));
+      locais.push([eq.tipo, sint, 'como consertar'].filter(Boolean).join(' '));
+    }
+    const daIA = (Array.isArray(r.video_buscas) ? r.video_buscas : []).concat([r.video_busca]);
+    return [...new Set(locais.concat(daIA).map(q => String(q || '').trim()).filter(Boolean))].slice(0, 3);
+  }
 
   // ── Busca de vídeos via Serper (endpoint dedicado de YouTube) ──
   // Plano gratuito: 2.500 queries/mês — serper.dev
@@ -1364,12 +1489,7 @@ Para risco baixo ou médio, seja prático e didático como se explicasse para al
             'Content-Type': 'application/json',
             'X-API-KEY': key
           },
-          body: JSON.stringify({
-            q: `${termo} tutorial passo a passo`,
-            gl: 'br',
-            hl: 'pt',
-            num: 5
-          })
+          body: JSON.stringify({ q: termo, gl: 'br', hl: 'pt', num: 10 })
         });
 
         // 401/403 = chave inválida · 429 = cota estourada → tenta a próxima
@@ -1387,7 +1507,6 @@ Para risco baixo ou médio, seja prático e didático como se explicasse para al
         // Serper retorna { videos: [{ title, link, channel, ... }] }
         return (data.videos || [])
           .filter(v => extractYouTubeId(v.link))
-          .slice(0, 3)
           .map(v => ({
             titulo: v.title  || 'Vídeo tutorial',
             canal:  v.channel || '',
@@ -1402,6 +1521,29 @@ Para risco baixo ou médio, seja prático e didático como se explicasse para al
 
     console.error('Nenhuma chave Serper disponível funcionou.');
     return [];
+  }
+
+  // Busca em ordem (específico → geral), filtra o que não combina com o equipamento
+  // e devolve no máximo 3 vídeos, os mais relevantes primeiro.
+  async function buscarVideosRelevantes(r) {
+    const eq = r.equipamento || {};
+    const sintoma = r.sintoma || r.problema || '';
+    const vistos = new Map();
+
+    const melhores = () => [...vistos.values()]
+      .map(v => ({ v, a: avaliarVideo(v, eq, sintoma) }))
+      .filter(x => x.a.ok)
+      .sort((x, y) => y.a.score - x.a.score);
+
+    for (const q of montarConsultas(r)) {
+      const lista = await buscarVideosSerper(q);
+      lista.forEach(v => {
+        const id = extractYouTubeId(v.url);
+        if (id && !vistos.has(id)) vistos.set(id, v);
+      });
+      if (melhores().length >= 3) break;
+    }
+    return melhores().slice(0, 3).map(x => x.v);
   }
 
   const submitBtn = document.getElementById('submitBtn');
@@ -1432,7 +1574,8 @@ Para risco baixo ou médio, seja prático e didático como se explicasse para al
       if (selectedCategory) userText += `\n\n(Categoria informada pelo usuário: ${selectedCategory})`;
       const marca = document.getElementById('marcaInput').value.trim();
       const idade = document.getElementById('idadeInput').value.trim();
-      if (marca) userText += `\nMarca/modelo informado: ${marca}`;
+      if (photoBase64) userText += '\n\n(A foto anexada mostra o equipamento. Use-a como referência principal: identifique tipo, marca e modelo lendo etiquetas e logotipos visíveis, e observe o estado real do aparelho.)';
+      if (marca) userText += `\nMarca/modelo informado pelo usuário (trate como verdade): ${marca}`;
       if (idade) userText += `\nAno ou tempo de uso informado: ${idade}`;
       content.push({ text: userText });
 
@@ -1443,7 +1586,7 @@ Para risco baixo ou médio, seja prático e didático como se explicasse para al
         throw new Error('Configure sua chave do Gemini para continuar.');
       }
       // Lista de modelos em ordem de preferência — se um falhar com 503/429, tenta o próximo
-      const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.0-flash-lite'];
+      const GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.0-flash-lite'];
 
       // Tenta cada modelo em sequência — fallback automático em 503/429
       const safeKey = encodeURIComponent(API_KEY);
@@ -1457,7 +1600,7 @@ Para risco baixo ou médio, seja prático e didático como se explicasse para al
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
               contents: [{ role: 'user', parts: content }],
-              generationConfig: { maxOutputTokens: 3000 }
+              generationConfig: { maxOutputTokens: 4096, responseMimeType: 'application/json' }
             })
           }
         );
@@ -1518,9 +1661,10 @@ Para risco baixo ou médio, seja prático e didático como se explicasse para al
       }
 
       // Busca os vídeos reais via Serper (só se o reparo não for de risco alto)
+      parsed.equipamento = normalizarEquipamento(parsed.equipamento);
       if (parsed.risco !== 'alto') {
         ctaLabel.textContent = 'Buscando vídeos...';
-        parsed.videos = await buscarVideosSerper(parsed.video_busca);
+        parsed.videos = await buscarVideosRelevantes(parsed);
       }
 
       await renderResult(parsed);
@@ -1567,6 +1711,29 @@ Para risco baixo ou médio, seja prático e didático como se explicasse para al
     pill.textContent = riscoLabel;
     pill.className   = 'pill ' + (r.risco || 'baixo');
 
+    // Equipamento identificado (a partir da foto/texto)
+    const eq = r.equipamento || {};
+    const equipBox = document.getElementById('equipBox');
+    if (eq.tipo || eq.marca || eq.modelo) {
+      document.getElementById('equipNome').textContent =
+        [eq.tipo, eq.marca, eq.modelo].filter(Boolean).join(' · ');
+      let sub;
+      if (eq.modelo) {
+        sub = eq.origem === 'foto' ? 'Marca e modelo lidos na foto.'
+            : eq.origem.startsWith('texto') ? 'Informado por você.'
+            : 'Identificado pela IA. Confira se está certo.';
+      } else {
+        sub = 'Não consegui ler o modelo. Com ele, os vídeos e o passo a passo ficam bem mais certeiros.';
+      }
+      document.getElementById('equipSub').textContent = sub;
+      document.getElementById('equipModeloInput').value = '';
+      document.getElementById('equipRefine').style.display =
+        (!eq.modelo && r.risco !== 'alto') ? 'flex' : 'none';
+      equipBox.style.display = 'block';
+    } else {
+      equipBox.style.display = 'none';
+    }
+
     const banner = document.getElementById('safetyBanner');
     const body   = document.getElementById('resultBody');
 
@@ -1584,7 +1751,9 @@ Para risco baixo ou médio, seja prático e didático como se explicasse para al
 
       const stepsEl = document.getElementById('resPassos');
       stepsEl.innerHTML = '';
-      (r.passo_a_passo || []).forEach((step, i) => {
+      // Remove numeração que a IA às vezes escreve ("1.", "Passo 2:"), pois o app já numera
+      const limparPasso = t => String(t || '').replace(/^\s*(?:passo\s*)?\d+\s*[.)\-:–—]\s*/i, '').trim();
+      (r.passo_a_passo || []).map(limparPasso).filter(Boolean).forEach((step, i) => {
         const li = document.createElement('li');
         li.innerHTML = `<span class="step-num">${i+1}</span><span class="step-text">${escapeHtml(step)}</span>`;
         stepsEl.appendChild(li);
@@ -1754,6 +1923,17 @@ Para risco baixo ou médio, seja prático e didático como se explicasse para al
     div.textContent = str;
     return div.innerHTML;
   }
+
+  // Refaz o diagnóstico com a marca/modelo que o usuário digitou (reaproveita foto e descrição)
+  document.getElementById('equipRefineBtn').addEventListener('click', () => {
+    const v = document.getElementById('equipModeloInput').value.trim();
+    if (!v) return;
+    document.getElementById('marcaInput').value = v;
+    document.getElementById('result').style.display   = 'none';
+    document.getElementById('formView').style.display = 'block';
+    window.scrollTo({top:0, behavior:'smooth'});
+    submitBtn.click();
+  });
 
   document.getElementById('resetBtn').addEventListener('click', () => {
     // Limpa resultado anterior para não piscar ao reutilizar
