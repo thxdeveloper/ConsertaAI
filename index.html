@@ -1079,6 +1079,13 @@ header.top{padding-right:40px}
 .ks-btn.ks-danger{flex:0 0 auto;color:var(--bad)}
 .ks-btn.armed{background:var(--bad);border-color:var(--bad);color:#fff}
 .ks-cancel{background:none;border:0;color:var(--ink-soft);font-size:12.5px;font-weight:600;text-decoration:underline;text-underline-offset:2px;padding:8px 2px 0;cursor:pointer}
+
+/* imagem de fundo do tema acompanha o deslocamento do topo (recorte da câmera):
+   texto e imagem mantêm exatamente a mesma posição relativa do mockup */
+.app::before{
+  top:max(env(safe-area-inset-top,0px),var(--sat,0px));
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 max(env(safe-area-inset-top,0px),var(--sat,0px))),linear-gradient(to right,transparent 0,rgba(0,0,0,.6) 30%,#000 62%),linear-gradient(to bottom,#000 72%,transparent 100%);
+  mask-image:linear-gradient(to bottom,transparent 0,#000 max(env(safe-area-inset-top,0px),var(--sat,0px))),linear-gradient(to right,transparent 0,rgba(0,0,0,.6) 30%,#000 62%),linear-gradient(to bottom,#000 72%,transparent 100%)}
 </style>
 </head>
 <body>
@@ -1960,7 +1967,7 @@ Responda SEMPRE e SOMENTE com um objeto JSON válido, sem nenhum texto antes ou 
 - "pecas": array de strings curtas
 - "passo_a_passo": array de strings (regras abaixo)
 - "videos": array vazio []
-- "video_buscas": array com 3 termos de busca para o YouTube em português, do mais específico ao mais geral: (1) tipo + marca + modelo + defeito; (2) tipo + marca + defeito, sem o modelo; (3) tipo + defeito + "como consertar". Se marca ou modelo forem desconhecidos, simplesmente omita-os (nunca escreva "marca desconhecida"). Cada termo com no máximo 8 palavras.
+- "video_buscas": array com 4 termos de busca para o YouTube em português, do mais específico ao mais geral, aproveitando TODOS os detalhes que o usuário deu (tipo, marca, modelo, ano/versão/motorização, sintoma exato, código de erro, barulho, quando o defeito acontece): (1) tudo junto: tipo + marca + modelo + ano + defeito detalhado; (2) tipo + marca + modelo + defeito; (3) tipo + marca + defeito, sem o modelo; (4) tipo + defeito + "como consertar". Se marca, modelo ou ano forem desconhecidos, simplesmente omita-os (nunca escreva "marca desconhecida"). Cada termo com no máximo 12 palavras, sem aspas.
 - "video_busca": string — igual ao primeiro termo de "video_buscas"
 - "aviso_seguranca": string com motivo do risco, ou null se risco for baixo ou medio
 
@@ -2019,7 +2026,7 @@ Se a mensagem do usuário disser que ele leu o aviso, entende os riscos e decidi
   }
 
   // Nota de relevância de um vídeo para o equipamento diagnosticado
-  function avaliarVideo(v, eq, sintoma) {
+  function avaliarVideo(v, eq, sintoma, ano) {
     const titulo = v.titulo || '';
     const t  = norm(titulo + ' ' + (v.canal || ''));
     const tc = t.replace(/ /g, '');
@@ -2044,23 +2051,44 @@ Se a mensagem do usuário disser que ele leu o aviso, entende os riscos e decidi
     if (marca && t.includes(marca)) score += 2;
     const tipoOk = tokens(eq.tipo).some(w => t.includes(w));
     if (tipoOk) score += 3;
-    score += Math.min(3, tokens(sintoma).filter(w => t.includes(w)).length);
+    score += Math.min(4, tokens(sintoma).filter(w => t.includes(w)).length);
+    if (ano && t.includes(ano)) score += 2;
 
     return { score, ok: (tipoOk || modeloOk) && score >= 3 };
   }
 
-  // Consultas da mais específica (com modelo) para a mais geral
+  // Ano citado pelo usuário (ex.: "2015"), usado pra casar vídeo do mesmo ano/geração
+  function anoCitado() {
+    const el = document.getElementById('idadeInput');
+    const m = el ? String(el.value || '').match(/\b(19|20)\d{2}\b/) : null;
+    return m ? m[0] : '';
+  }
+
+  // Quantos vídeos mostrar como opção
+  const MAX_VIDEOS = 5;
+
+  // Consultas da mais específica (usa TODOS os detalhes dados pelo usuário) para a mais geral.
+  // Cada consulta gasta 1 crédito do Serper, então são no máximo 4.
   function montarConsultas(r) {
     const eq = r.equipamento || {};
     const sint = String(r.sintoma || '').trim();
+    const ano = anoCitado();
     const locais = [];
     if (eq.tipo) {
+      locais.push([eq.tipo, eq.marca, eq.modelo, ano, sint].filter(Boolean).join(' '));   // tudo junto
       if (eq.modelo) locais.push([eq.tipo, eq.marca, eq.modelo, sint].filter(Boolean).join(' '));
       if (eq.marca)  locais.push([eq.tipo, eq.marca, sint].filter(Boolean).join(' '));
       locais.push([eq.tipo, sint, 'como consertar'].filter(Boolean).join(' '));
     }
     const daIA = (Array.isArray(r.video_buscas) ? r.video_buscas : []).concat([r.video_busca]);
-    return [...new Set(locais.concat(daIA).map(q => String(q || '').trim()).filter(Boolean))].slice(0, 3);
+    const vistas = new Set();
+    const out = [];
+    daIA.concat(locais).forEach(q => {
+      const limpa = String(q || '').replace(/["“”]/g, '').trim().split(/\s+/).slice(0, 12).join(' ');
+      const k = norm(limpa);
+      if (limpa && !vistas.has(k)) { vistas.add(k); out.push(limpa); }
+    });
+    return out.slice(0, 4);
   }
 
   // ── Busca de vídeos via Serper (endpoint dedicado de YouTube) ──
@@ -2121,26 +2149,32 @@ Se a mensagem do usuário disser que ele leu o aviso, entende os riscos e decidi
   }
 
   // Busca em ordem (específico → geral), filtra o que não combina com o equipamento
-  // e devolve no máximo 3 vídeos, os mais relevantes primeiro.
+  // e devolve até MAX_VIDEOS vídeos, os mais relevantes primeiro. Vídeos achados pelas
+  // consultas mais detalhadas ganham um pequeno bônus de ordenação.
   async function buscarVideosRelevantes(r) {
     const eq = r.equipamento || {};
     const sintoma = r.sintoma || r.problema || '';
-    const vistos = new Map();
+    const ano = anoCitado();
+    const consultas = montarConsultas(r);
+    const vistos = new Map();   // id -> { v, qi }
 
     const melhores = () => [...vistos.values()]
-      .map(v => ({ v, a: avaliarVideo(v, eq, sintoma) }))
+      .map(x => {
+        const a = avaliarVideo(x.v, eq, sintoma, ano);
+        return { v: x.v, a, rank: a.score + (consultas.length - x.qi) * 0.4 };
+      })
       .filter(x => x.a.ok)
-      .sort((x, y) => y.a.score - x.a.score);
+      .sort((x, y) => y.rank - x.rank);
 
-    for (const q of montarConsultas(r)) {
-      const lista = await buscarVideosSerper(q);
+    for (let qi = 0; qi < consultas.length; qi++) {
+      const lista = await buscarVideosSerper(consultas[qi]);
       lista.forEach(v => {
         const id = extractYouTubeId(v.url);
-        if (id && !vistos.has(id)) vistos.set(id, v);
+        if (id && !vistos.has(id)) vistos.set(id, { v, qi });
       });
-      if (melhores().length >= 3) break;
+      if (melhores().length >= MAX_VIDEOS) break;
     }
-    return melhores().slice(0, 3).map(x => x.v);
+    return melhores().slice(0, MAX_VIDEOS).map(x => x.v);
   }
 
   const submitBtn = document.getElementById('submitBtn');
@@ -2403,7 +2437,7 @@ Se a mensagem do usuário disser que ele leu o aviso, entende os riscos e decidi
       });
 
       currentSlug   = slugify(r.video_busca || r.problema);
-      currentVideos = Array.isArray(r.videos) ? r.videos.slice(0, 3) : [];
+      currentVideos = Array.isArray(r.videos) ? r.videos.slice(0, MAX_VIDEOS) : [];
 
       // Carrega dados da comunidade
       let communityData = null;
@@ -2429,7 +2463,7 @@ Se a mensagem do usuário disser que ele leu o aviso, entende os riscos e decidi
               url: topUrl,
               _community: topData.count
             });
-            currentVideos = currentVideos.slice(0, 3);
+            currentVideos = currentVideos.slice(0, MAX_VIDEOS);
           }
           currentVideos.sort((a, b) => (b._community || 0) - (a._community || 0));
         }
