@@ -1807,6 +1807,20 @@ header.top{padding-right:40px}
       '?playlist=' + id + '&autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&loop=1&start=' + start;
   }
 
+  // ── Link alternativo: coloca um "-" entre o t e o u de youtube (yout-ube.com) ──
+  // Ex.: https://www.youtube.com/watch?v=ID -> https://www.yout-ube.com/watch?v=ID
+  const USAR_LINK_ALTERNATIVO = true; // mude para false para voltar ao player embutido
+  function linkAlternativoYt(url) {
+    const id = extractYouTubeId(url);
+    if (!id) return url;
+    let extra = '';
+    try {
+      const t = new URL(url).searchParams.get('t');
+      if (t) extra = '&t=' + encodeURIComponent(t);
+    } catch (e) {}
+    return 'https://www.yout-ube.com/watch?v=' + id + extra;
+  }
+
   // ── Modal player ──
   const videoModalOverlay   = document.getElementById('videoModalOverlay');
   const videoModalClose     = document.getElementById('videoModalClose');
@@ -1840,17 +1854,18 @@ header.top{padding-right:40px}
 
     videoModalTitle.textContent   = video.titulo || 'Tutorial';
     videoModalChannel.textContent = video.canal  || '';
-    videoOpenYt.href = video.url;
-    videoFallbackLink.href = video.url;
+    const linkFinal = USAR_LINK_ALTERNATIVO ? linkAlternativoYt(video.url) : video.url;
+    videoOpenYt.href = linkFinal;
+    videoFallbackLink.href = linkFinal;
 
     hideEmbedFallback();
 
     if (isLocalFile) {
       // Em file:// o iframe sempre é bloqueado — mostra fallback direto
       videoIframe.src = '';
-      showEmbedFallback(video.url);
+      showEmbedFallback(linkFinal);
     } else {
-      videoIframe.src = montarEmbedUrl(ytId, video.url);
+      videoIframe.src = USAR_LINK_ALTERNATIVO ? linkFinal : montarEmbedUrl(ytId, video.url);
 
       // Timer de segurança: se o iframe não carregou em 6s, mostra fallback
       clearTimeout(iframeLoadTimer);
@@ -1861,7 +1876,7 @@ header.top{padding-right:40px}
           try {
             const cw = videoIframe.contentWindow;
             if (!cw || !cw.document || cw.document.body === null) {
-              showEmbedFallback(video.url);
+              showEmbedFallback(linkFinal);
             }
           } catch (e) {
             // Cross-origin: iframe carregou algo (normal), não mostra fallback
