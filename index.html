@@ -1792,6 +1792,21 @@ header.top{padding-right:40px}
     return null;
   }
 
+  // ── Converte link original do YouTube em link embed (youtube-nocookie), igual ao app da TV ──
+  // Ex.: https://www.youtube.com/watch?v=ID  ->  https://www.youtube-nocookie.com/embed/ID?playlist=ID&autoplay=1&iv_load_policy=3&loop=1&start=0
+  function montarEmbedUrl(id, urlOriginal) {
+    let start = 0;
+    try {
+      const t = new URL(urlOriginal).searchParams.get('t') || new URL(urlOriginal).searchParams.get('start');
+      if (t) {
+        const m = String(t).match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/);
+        if (m) start = (+m[1]||0)*3600 + (+m[2]||0)*60 + (+m[3]||0);
+      }
+    } catch (e) {}
+    return 'https://www.youtube-nocookie.com/embed/' + id +
+      '?playlist=' + id + '&autoplay=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&loop=1&start=' + start;
+  }
+
   // ── Modal player ──
   const videoModalOverlay   = document.getElementById('videoModalOverlay');
   const videoModalClose     = document.getElementById('videoModalClose');
@@ -1835,7 +1850,7 @@ header.top{padding-right:40px}
       videoIframe.src = '';
       showEmbedFallback(video.url);
     } else {
-      videoIframe.src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`;
+      videoIframe.src = montarEmbedUrl(ytId, video.url);
 
       // Timer de segurança: se o iframe não carregou em 6s, mostra fallback
       clearTimeout(iframeLoadTimer);
